@@ -1,0 +1,128 @@
+# ============================================================================
+# GLOBAL LOGGING CONFIGURATION
+# ============================================================================
+# This is the default configuration for all applications
+# Apps can override these settings with their own logging.yaml file
+
+# Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+# Can be overridden by LOG_LEVEL environment variable
+level: INFO
+
+# Format: 'json' or 'text'
+# JSON is recommended for production (better for log aggregation)
+format: json
+
+# Output destinations: console, file, newrelic
+outputs:
+  - console
+
+# Include additional context in every log
+include_context: true
+
+# Auto-include request context (user_id, trace_id, etc.) in every log
+include_request_context: true
+
+# Directory for log files (when 'file' output is enabled)
+# Default: logs/ in application directory
+# log_directory: /var/log/asaad-apps
+
+# ============================================================================
+# SENSITIVE DATA FILTERING
+# ============================================================================
+# Patterns to redact from logs (regex patterns)
+sensitive_patterns:
+  - password
+  - api_key
+  - token
+  - secret
+  - key
+  - authorization
+  - credential
+  - credit_card
+  - ssn
+  - social_security
+
+# ============================================================================
+# ERROR LOGGING OPTIONS
+# ============================================================================
+error:
+  # Auto-capture stack trace for all errors (even without exception)
+  auto_stack_trace: true
+  
+  # Include exception cause chain
+  include_cause: true
+  
+  # Include custom exception attributes
+  include_attributes: true
+  
+  # Maximum stack trace length (characters, 0 = unlimited)
+  max_stack_length: 5000
+
+# ============================================================================
+# ENVIRONMENT-SPECIFIC SETTINGS
+# ============================================================================
+environments:
+  development:
+    level: DEBUG
+    outputs: [console]
+    format: json
+    newrelic:
+      verbose: true  # Show "[NewRelic] ✓ Sent X logs" messages
+  
+  staging:
+    level: INFO
+    outputs: [console, file]
+    format: json
+    newrelic:
+      verbose: false
+  
+  production:
+    level: INFO
+    outputs: [console, file, newrelic]
+    format: json
+    newrelic:
+      verbose: false  # Disable debug output in production
+
+# ============================================================================
+# NEW RELIC INTEGRATION
+# ============================================================================
+newrelic:
+  # Enable New Relic (also enabled if NEW_RELIC_LICENSE_KEY env var is set)
+  enabled: false
+  
+  # Mode: 'agent' or 'api'
+  # - agent: Use New Relic APM agent (run with newrelic-admin). Best for production.
+  #          Provides: APM, distributed tracing, logs in context, error tracking
+  # - api:   Send logs directly via HTTP API. Good for local development.
+  #          Provides: Logs only (no APM or tracing)
+  mode: api
+  
+  # App name in New Relic (default: app_name parameter)
+  # Can be overridden by NEW_RELIC_APP_NAME environment variable
+  app_name: null
+  
+  # License key (should be set via NEW_RELIC_LICENSE_KEY env var)
+  license_key: null
+  
+  # Log level for New Relic agent
+  log_level: info
+  
+  # Enable distributed tracing (agent mode only)
+  distributed_tracing_enabled: true
+  
+  # API endpoint for log forwarding (api mode only)
+  # US: https://log-api.newrelic.com/log/v1
+  # EU: https://log-api.eu.newrelic.com/log/v1
+  api_endpoint: https://log-api.newrelic.com/log/v1
+  
+  # Batch settings for API mode (to reduce HTTP overhead)
+  batch_size: 10            # Send logs in batches of 10
+  flush_interval: 2         # Flush every 2 seconds
+  
+  # Verbose mode: show debug output for New Relic sending
+  # Default: True in development, False in production
+  # Set explicitly to override auto-detection
+  verbose: null  # null = auto-detect based on environment
+  
+  # Include request context in New Relic logs
+  include_context: true

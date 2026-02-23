@@ -1,0 +1,123 @@
+# =============================================================================
+# UMAMI ANALYTICS CONFIGURATION
+# =============================================================================
+# This configuration is loaded by default and can be overridden by:
+# 1. App-level config (applications/<app>/analytics.yaml)
+# 2. Environment variables (highest priority)
+#
+# Environment Variables:
+#   UMAMI_WEBSITE_ID  - Your Umami website ID (required)
+#   UMAMI_API_URL     - Your Umami API URL (default: https://cloud.umami.is)
+#   UMAMI_API_KEY     - API key for server-side tracking (optional)
+#   UMAMI_HOSTNAME    - Override hostname in events
+#   UMAMI_ENABLED     - Enable/disable analytics (true/false)
+#   UMAMI_DEBUG       - Enable debug logging (true/false)
+# =============================================================================
+
+# Core Umami settings
+umami:
+  # API endpoint (cloud.umami.is for hosted, or your self-hosted URL)
+  api_url: "https://cloud.umami.is"
+  
+  # Default website ID (override with UMAMI_WEBSITE_ID env var)
+  website_id: null
+  
+  # API key for authenticated requests (optional)
+  api_key: null
+  
+  # Hostname to report (defaults to app_name if not set)
+  hostname: null
+  
+  # Enable/disable analytics
+  enabled: true
+  
+  # Request timeout in seconds
+  timeout: 5
+  
+  # Retry configuration
+  retry_attempts: 2
+  retry_delay: 0.5
+
+# Async queue settings (for non-blocking event sending)
+async:
+  enabled: true
+  batch_size: 10
+  flush_interval: 5.0  # seconds
+  max_queue_size: 1000
+
+# Privacy settings - CRITICAL: Never send PII
+privacy:
+  # Sanitize email addresses in URLs/data
+  sanitize_emails: true
+  
+  # Sanitize UUIDs in URLs
+  sanitize_uuids: true
+  
+  # Sanitize JWT tokens
+  sanitize_tokens: true
+  
+  # Sanitize API keys (sk_, pk_, api_, key_)
+  sanitize_api_keys: true
+  
+  # Sanitize phone numbers
+  sanitize_phones: true
+  
+  # Sanitize credit card patterns
+  sanitize_credit_cards: true
+  
+  # Sanitize long hex strings (32+ chars)
+  sanitize_hex_strings: true
+  
+  # Custom patterns to redact (list of regex strings)
+  custom_patterns: []
+  
+  # Fields to never log (case-insensitive)
+  sensitive_fields:
+    - password
+    - token
+    - secret
+    - api_key
+    - apikey
+    - authorization
+    - credit_card
+    - card_number
+    - cvv
+    - ssn
+
+# Environment-specific overrides
+environments:
+  development:
+    umami:
+      enabled: false  # Don't pollute analytics in dev
+    async:
+      enabled: false  # Sync mode for easier debugging
+  
+  staging:
+    umami:
+      enabled: true
+  
+  production:
+    umami:
+      enabled: true
+    async:
+      enabled: true
+
+# Flask integration settings
+flask:
+  # Auto-track all requests
+  auto_track_requests: true
+  
+  # Paths to exclude from auto-tracking
+  exclude_paths:
+    - /health
+    - /healthz
+    - /ready
+    - /metrics
+    - /favicon.ico
+    - /static
+  
+  # Track response times
+  track_timing: true
+  
+  # Track error responses (4xx, 5xx)
+  track_errors: true

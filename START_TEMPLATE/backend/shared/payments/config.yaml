@@ -1,0 +1,202 @@
+# ============================================================================
+# PAYMENT SYSTEM CONFIGURATION
+# ============================================================================
+# This file contains default configuration for the payment system.
+# Applications can override these settings in their own config files.
+# ============================================================================
+
+# System Settings
+system:
+  provider: stripe  # Payment provider ('stripe', 'paypal', etc.)
+  currency: usd
+  test_mode: true  # Use test API keys
+  
+# Checkout Settings
+checkout:
+  session_expiration: 1800  # 30 minutes in seconds
+  allow_promotion_codes: true
+  payment_methods:
+    - card
+    - wallet  # Apple Pay, Google Pay
+  billing_address_collection: auto  # 'auto' or 'required'
+  
+# Webhook Settings
+webhooks:
+  enabled: true
+  verify_signatures: true
+  events:
+    - checkout.session.completed
+    - payment_intent.succeeded
+    - payment_intent.failed
+    - charge.refunded
+  retry_config:
+    max_attempts: 3
+    initial_delay_seconds: 60
+    backoff_multiplier: 2
+  
+# Coupon Settings
+coupons:
+  enabled: true
+  case_sensitive: false
+  max_discount_percent: 100
+  allow_stacking: false  # Allow multiple coupons per purchase
+  
+# Credit Packages
+packages:
+  starter:
+    id: "pkg_starter"
+    name: "Starter Pack"
+    credits: 100
+    price_usd: 10.00
+    discount_percent: 0
+    popular: false
+    description: "Perfect for trying out the service"
+  
+  popular:
+    id: "pkg_popular"
+    name: "Popular Pack"
+    credits: 500
+    price_usd: 40.00
+    discount_percent: 20  # 20% discount (normally $50)
+    popular: true
+    description: "Most popular choice"
+  
+  pro:
+    id: "pkg_pro"
+    name: "Pro Pack"
+    credits: 1000
+    price_usd: 75.00
+    discount_percent: 25  # 25% discount (normally $100)
+    popular: false
+    description: "Best value for power users"
+  
+  enterprise:
+    id: "pkg_enterprise"
+    name: "Enterprise Pack"
+    credits: 5000
+    price_usd: 300.00
+    discount_percent: 40  # 40% discount (normally $500)
+    popular: false
+    description: "For heavy usage"
+
+# Database Configuration (for storing payment records)
+database:
+  # Supabase tables
+  payments_table: "payment_transactions"  # Main payment tracking table
+  checkout_sessions_table: "checkout_sessions"
+  webhook_events_table: "webhook_events"
+  coupons_table: "coupons"
+  
+  # RPC functions (if using Supabase)
+  rpc:
+    create_payment: "create_payment_record"
+    update_payment: "update_payment_status"
+    complete_payment: "complete_payment_and_add_credits"
+    check_duplicate: "check_payment_duplicate"
+    apply_coupon: "apply_coupon_to_session"
+    record_webhook: "record_webhook_event"
+
+# Payment Tracking Settings
+payment_tracking:
+  # Session expiry (how long a checkout session is valid)
+  session_expiry_minutes: 30
+  
+  # Duplicate prevention
+  check_duplicates_before_credit: true
+  
+  # Status transitions
+  allowed_transitions:
+    pending: ["processing", "completed", "failed", "expired", "cancelled"]
+    processing: ["completed", "failed"]
+    completed: ["refunded", "partially_refunded"]
+    failed: ["pending"]  # Allow retry
+    expired: []
+    cancelled: []
+    refunded: []
+    partially_refunded: ["refunded"]
+  
+  # Cleanup settings
+  cleanup:
+    enabled: true
+    mark_expired_after_minutes: 60
+    delete_cancelled_after_days: 30
+    delete_failed_after_days: 90
+
+# Recovery Settings (for webhook failures)
+recovery:
+  enabled: true
+  auto_verify_on_success_page: true
+  max_verification_attempts: 3
+  verification_timeout_seconds: 30
+
+# Stripe-Specific Settings
+stripe:
+  api_version: "2023-10-16"
+  success_url_mode: "redirect"  # 'redirect' or 'embedded'
+  metadata_keys:
+    user_id: "user_id"
+    package_id: "package_id"
+    credits: "credits"
+    app_name: "app_name"
+
+# Security Settings
+security:
+  # Rate limiting
+  rate_limit:
+    enabled: true
+    max_checkouts_per_hour: 10
+    max_failed_payments_per_day: 5
+  
+  # Fraud detection
+  fraud_detection:
+    enabled: true
+    suspicious_amount_threshold: 1000.00  # Flag purchases over this amount
+    max_purchase_frequency_minutes: 5  # Flag if multiple purchases within N minutes
+  
+  # IP blocking
+  ip_blocking:
+    enabled: false
+    blocked_countries: []
+
+# Notifications
+notifications:
+  email:
+    enabled: true
+    payment_success: true
+    payment_failed: true
+    refund_processed: true
+  
+  webhook_urls:
+    payment_success: null
+    payment_failed: null
+    refund_processed: null
+
+# Logging
+logging:
+  log_level: INFO
+  log_payments: true
+  log_webhooks: true
+  log_coupons: true
+  mask_sensitive_data: true  # Mask card numbers, etc.
+  
+# Monitoring
+monitoring:
+  track_conversion_rate: true
+  track_average_purchase: true
+  track_coupon_usage: true
+  alert_on_failed_webhooks: true
+
+# Admin Features
+admin:
+  allow_manual_refunds: true
+  allow_coupon_creation: true
+  require_refund_reason: true
+  max_refund_days: 30  # Days after purchase
+
+# URLs (can be overridden per environment)
+urls:
+  success: "/payment/success"
+  cancel: "/payment/cancel"
+  webhook: "/api/webhooks/stripe"
+  terms: "/terms"
+  privacy: "/privacy"

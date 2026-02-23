@@ -1,0 +1,449 @@
+# ============================================================================
+# UNIVERSAL CREDITS & PAYMENT CONFIGURATION
+# ============================================================================
+# This configuration file controls ALL pricing, packages, subscriptions,
+# coupons, and credit costs. Changes here apply without code redeployment.
+#
+# SUPPORTED FEATURES:
+# - One-time credit packages
+# - Recurring subscriptions with automatic credit grants
+# - Discount coupons (percentage and fixed amount)
+# - Per-model credit costs
+# - Promotional bonuses (signup, first purchase, referral)
+#
+# ADMIN UI READY: This structure is designed for future admin dashboard
+# ============================================================================
+
+# ============================================================================
+# CREDIT PACKAGES (One-time purchases)
+# ============================================================================
+# Users can buy credits instantly. No recurring charges.
+# Pricing uses dynamic Stripe checkout (no pre-setup required).
+
+packages:
+  - id: starter
+    name: "Starter Pack"
+    description: "Perfect for trying out"
+    credits: 50
+    price_usd: 4.99
+    active: true
+    popular: false
+    badge: null
+    sort_order: 1
+    
+  - id: creator
+    name: "Creator Pack"
+    description: "Best value for creators"
+    credits: 150
+    price_usd: 9.99
+    active: true
+    popular: true
+    badge: "Best Value"
+    sort_order: 2
+    
+  - id: pro
+    name: "Pro Pack"
+    description: "For power users"
+    credits: 500
+    price_usd: 24.99
+    active: true
+    popular: false
+    badge: null
+    sort_order: 3
+    
+  - id: enterprise
+    name: "Enterprise Pack"
+    description: "Maximum value"
+    credits: 2000
+    price_usd: 79.99
+    active: true
+    popular: false
+    badge: "Save 20%"
+    sort_order: 4
+
+# ============================================================================
+# SUBSCRIPTIONS (Recurring credits)
+# ============================================================================
+# Users subscribe and receive credits automatically each billing period.
+# Supports monthly and yearly billing intervals.
+#
+# stripe_price_id: Optional. If set, uses pre-created Stripe price.
+#                  If null, creates price dynamically (recommended for flexibility).
+
+subscriptions:
+  - id: basic_monthly
+    name: "Basic Monthly"
+    description: "100 credits refreshed every month"
+    credits_per_period: 100
+    price_usd: 7.99
+    interval: month           # month | year
+    interval_count: 1         # every N intervals
+    stripe_price_id: null     # null = dynamic pricing
+    trial_days: 0             # Free trial period
+    features:
+      - "100 credits/month"
+      - "All image models"
+      - "Email support"
+    active: true
+    popular: false
+    badge: null
+    sort_order: 1
+    
+  - id: pro_monthly
+    name: "Pro Monthly"
+    description: "500 credits + priority access"
+    credits_per_period: 500
+    price_usd: 24.99
+    interval: month
+    interval_count: 1
+    stripe_price_id: null
+    trial_days: 7
+    features:
+      - "500 credits/month"
+      - "All models (image + video)"
+      - "Priority generation queue"
+      - "Priority support"
+    active: true
+    popular: true
+    badge: "Most Popular"
+    sort_order: 2
+    
+  - id: pro_yearly
+    name: "Pro Yearly"
+    description: "Save 20% with annual billing"
+    credits_per_period: 500   # Still 500/month
+    price_usd: 239.88         # $19.99/month × 12
+    interval: year
+    interval_count: 1
+    stripe_price_id: null
+    trial_days: 14
+    features:
+      - "500 credits/month (6000/year)"
+      - "All models (image + video)"
+      - "Priority generation queue"
+      - "Priority support"
+      - "2 months FREE"
+    active: true
+    popular: false
+    badge: "Save 20%"
+    sort_order: 3
+    
+  - id: team_monthly
+    name: "Team Monthly"
+    description: "For small teams (coming soon)"
+    credits_per_period: 2000
+    price_usd: 79.99
+    interval: month
+    interval_count: 1
+    stripe_price_id: null
+    trial_days: 14
+    features:
+      - "2000 credits/month"
+      - "All models"
+      - "Team sharing (up to 5)"
+      - "Dedicated support"
+      - "API access"
+    active: false             # Coming soon
+    popular: false
+    badge: "Coming Soon"
+    sort_order: 4
+
+# ============================================================================
+# MODEL COSTS (Credits per generation)
+# ============================================================================
+# Define how many credits each AI model costs per generation.
+# _default is used for any model not explicitly listed.
+
+model_costs:
+  # --------------------------------------------
+  # Image Models (1-6 credits)
+  # --------------------------------------------
+  gemini-2-5-flash-image: 1   # Fast, cheap
+  gpt-image-1-mini: 2         # Medium quality
+  reve-edit-fast: 1           # Fast editing
+  reve-edit: 2                # Standard editing
+  flux-schnell: 1             # Fast generation
+  sdxl: 2                     # Stable Diffusion XL
+  flux-dev: 3                 # High quality
+  gpt-image-1: 4              # Premium quality
+  nano-banana: 4              # Specialized
+  qwen-image-edit-plus: 5     # Advanced editing
+  grok-2-image: 5             # High quality
+  seedream-4: 6               # Premium
+  
+  # --------------------------------------------
+  # Video Models (8-20 credits)
+  # --------------------------------------------
+  luma-ray: 8                 # Fast video
+  minimax-video: 10           # Standard video
+  kling-video: 12             # High quality video
+  runway-gen3: 15             # Premium video
+  sora-turbo: 20              # Ultra premium (future)
+  
+  # --------------------------------------------
+  # Default cost for unlisted models
+  # --------------------------------------------
+  _default: 1
+
+# ============================================================================
+# COUPONS & DISCOUNT CODES
+# ============================================================================
+# Support both percentage and fixed-amount discounts.
+# Can restrict to specific packages/subscriptions.
+# Track usage limits globally and per-user.
+
+coupons:
+  WELCOME10:
+    name: "Welcome Discount"
+    description: "10% off your first purchase"
+    type: percent             # percent | fixed
+    discount: 10              # 10% off
+    applies_to: all           # all | packages | subscriptions
+    valid_items: []           # Empty = all items of type
+    max_uses: null            # null = unlimited
+    max_uses_per_user: 1      # Once per user
+    min_purchase_usd: 0       # No minimum
+    valid_from: null          # null = always valid
+    valid_until: null         # null = never expires
+    active: true
+    
+  HALFOFF:
+    name: "Half Off Pro"
+    description: "50% off Pro and Enterprise packs"
+    type: percent
+    discount: 50
+    applies_to: packages
+    valid_items:              # Only these packages
+      - pro
+      - enterprise
+    max_uses: 100             # Limited availability
+    max_uses_per_user: 1
+    min_purchase_usd: 20
+    valid_from: "2024-01-01"
+    valid_until: "2025-12-31"
+    active: true
+    
+  SAVE5:
+    name: "Save $5"
+    description: "$5 off any purchase over $10"
+    type: fixed
+    discount: 5               # $5 off
+    applies_to: all
+    valid_items: []
+    max_uses: null
+    max_uses_per_user: 3      # Can use 3 times
+    min_purchase_usd: 10      # Minimum $10 purchase
+    valid_from: null
+    valid_until: null
+    active: true
+    
+  EARLYBIRD:
+    name: "Early Bird Special"
+    description: "25% off annual subscriptions"
+    type: percent
+    discount: 25
+    applies_to: subscriptions
+    valid_items:
+      - pro_yearly
+    max_uses: 50
+    max_uses_per_user: 1
+    min_purchase_usd: 0
+    valid_from: null
+    valid_until: "2025-06-30"
+    active: true
+
+# ============================================================================
+# PROMOTIONS & BONUSES
+# ============================================================================
+# Automatic bonuses applied based on user actions.
+
+promotions:
+  # Credits given to new users on signup
+  signup_bonus:
+    enabled: true
+    credits: 10
+    description: "Welcome! Here are 10 free credits to get started."
+    
+  # Extra credits on first purchase
+  first_purchase_bonus:
+    enabled: true
+    bonus_percent: 10         # 10% extra credits
+    max_bonus_credits: 50     # Cap at 50 bonus credits
+    description: "First purchase bonus! Extra credits added."
+    
+  # Referral program
+  referral_bonus:
+    enabled: false            # Enable when ready
+    referrer_credits: 20      # Person who refers
+    referee_credits: 10       # Person who signs up
+    require_purchase: true    # Referee must make purchase
+    description: "Refer a friend and earn credits!"
+    
+  # Low balance reminder
+  low_balance_alert:
+    enabled: true
+    threshold: 5              # Alert when below 5 credits
+    message: "Running low on credits! Top up to continue creating."
+
+# ============================================================================
+# SYSTEM SETTINGS
+# ============================================================================
+
+settings:
+  # Currency
+  currency: USD
+  currency_symbol: "$"
+  
+  # Database provider
+  provider: supabase          # supabase | firebase | custom
+  
+  # Credit limits
+  allow_negative_balance: false
+  max_balance: 1000000        # 1 million credits max
+  min_transaction: 1
+  max_transaction: 100000
+  
+  # New user settings
+  signup_credits: 10
+  
+  # Stripe configuration
+  stripe:
+    mode: sandbox             # sandbox | live
+    # Webhook events we handle:
+    # - checkout.session.completed (one-time purchase)
+    # - customer.subscription.created
+    # - customer.subscription.updated
+    # - customer.subscription.deleted
+    # - invoice.paid (recurring subscription payment)
+    # - invoice.payment_failed
+    
+  # Subscription settings
+  subscriptions:
+    grace_period_days: 3      # Days after failed payment before suspension
+    prorate_changes: true     # Prorate when upgrading/downgrading
+    cancel_at_period_end: true # Don't charge after cancel, finish period
+    
+  # Config hot-reload settings
+  cache:
+    enabled: true
+    ttl_seconds: 60           # Re-read config every 60 seconds
+    
+  # Transaction history
+  history:
+    retention_days: 365       # Keep 1 year of history
+    default_page_size: 50
+    max_page_size: 200
+    
+  # Database tables (Supabase)
+  database:
+    tables:
+      profiles: "user_profiles"
+      transactions: "credit_transactions"
+      subscriptions: "user_subscriptions"
+      coupon_usage: "coupon_usage"
+    functions:
+      deduct: "deduct_credits"
+      add: "add_credits"
+
+# ============================================================================
+# FEATURE FLAGS
+# ============================================================================
+# Enable/disable features without code changes
+
+features:
+  packages_enabled: true
+  subscriptions_enabled: true
+  coupons_enabled: true
+  referrals_enabled: false
+  team_accounts_enabled: false
+
+# ============================================================================
+# SECURITY SETTINGS
+# ============================================================================
+
+security:
+  rate_limiting:
+    enabled: true
+    max_purchases_per_hour: 10
+    max_coupon_attempts_per_hour: 20
+    
+  fraud_detection:
+    enabled: false
+    alert_on_suspicious_patterns: false
+    
+  audit:
+    log_all_transactions: true
+    retain_audit_logs_days: 730  # 2 years
+
+# ============================================================================
+# STORAGE SETTINGS (FEATURE-017)
+# ============================================================================
+# Configures image storage limits by subscription tier.
+# Generated images are stored in Supabase Storage for persistence.
+
+storage:
+  enabled: true
+  bucket_name: "generated-images"
+  
+  # SECURITY: Private bucket with signed URLs
+  # - public: false = Only authenticated users can access via signed URLs
+  # - signed_url_expiry_seconds: How long each signed URL is valid
+  # This ensures users can only access their own images
+  public: false
+  signed_url_expiry_seconds: 3600  # 1 hour
+  
+  # File constraints
+  max_file_size_mb: 50  # Increased for video support
+  allowed_mime_types:
+    - "image/png"
+    - "image/jpeg"
+    - "image/webp"
+    - "image/gif"
+    - "video/mp4"
+    - "video/webm"
+    - "video/quicktime"
+  
+  # Storage quota by subscription tier
+  # limit_mb: -1 means unlimited
+  # retention_days: -1 means permanent
+  tiers:
+    free:
+      limit_mb: 100
+      retention_days: 7
+      auto_cleanup: true
+      description: "100 MB storage, 7 day retention"
+    
+    basic:
+      limit_mb: 1024
+      retention_days: 30
+      auto_cleanup: true
+      description: "1 GB storage, 30 day retention"
+    
+    pro:
+      limit_mb: 10240
+      retention_days: 90
+      auto_cleanup: true
+      description: "10 GB storage, 90 day retention"
+    
+    enterprise:
+      limit_mb: -1
+      retention_days: -1
+      auto_cleanup: false
+      description: "Unlimited storage, permanent retention"
+  
+  # Fallback for unknown tiers
+  default_tier: "free"
+  
+  # UI messages (used by frontend)
+  ui:
+    quota_warning_percent: 80
+    quota_warning_message: "You're using {percent}% of your storage. Upgrade for more!"
+    quota_full_message: "Storage full! Delete old stories or upgrade your plan."
+    tier_upgrade_cta: "Upgrade to get more storage"
+  
+  # Cleanup job settings
+  cleanup:
+    enabled: true
+    run_at_hour: 3  # 3 AM UTC
+    batch_size: 100
+    dry_run: false

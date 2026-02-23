@@ -1,0 +1,40 @@
+# Admin Module Configuration
+# ==========================
+# Default settings for the shared admin module.
+# Override these in your application's config.
+
+# Backup settings
+backup:
+  enabled: true
+  directory: "config_backups"
+  max_backups_per_config: 10
+  auto_cleanup_days: 30
+
+# File handling
+files:
+  encoding: "utf-8"
+  yaml:
+    default_flow_style: false
+    sort_keys: false
+    allow_unicode: true
+  json:
+    indent: 2
+    ensure_ascii: false
+
+# API settings
+api:
+  prefix: "/api/admin"
+  tags: ["Admin"]
+  require_auth: true
+
+# Search settings
+search:
+  case_sensitive: false
+  max_results: 100
+
+# Logging
+logging:
+  enabled: true
+  log_reads: false
+  log_writes: true
+  log_backups: true

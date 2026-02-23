@@ -1,0 +1,609 @@
+# =============================================================================
+# TELEMETRY CONFIGURATION
+# =============================================================================
+# Unified configuration for all telemetry (logging + analytics)
+# Controls what gets tracked, where it goes, and how it's processed
+# =============================================================================
+
+telemetry:
+  # Global enable/disable
+  enabled: true
+  
+  # Application identification
+  default_app_name: "asaadAshProjects"
+  
+  # Environment-specific settings
+  environments:
+    development:
+      log_level: DEBUG
+      sample_rate: 1.0  # Log everything in dev
+      console_output: true
+      umami_enabled: true
+      newrelic_enabled: true
+    
+    staging:
+      log_level: INFO
+      sample_rate: 1.0
+      console_output: false
+      umami_enabled: true
+      newrelic_enabled: true
+    
+    production:
+      log_level: INFO
+      sample_rate: 1.0
+      console_output: false
+      umami_enabled: true
+      newrelic_enabled: true
+
+# =============================================================================
+# EVENT DEFINITIONS
+# =============================================================================
+# Comprehensive list of all trackable events with metadata
+
+events:
+  # ---------------------------------------------------------------------------
+  # Authentication Events
+  # ---------------------------------------------------------------------------
+  auth:
+    signup_started:
+      description: "User initiated signup flow"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [method]
+    
+    signup_completed:
+      description: "User successfully created account"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, method, referrer]
+    
+    signup_failed:
+      description: "Signup attempt failed"
+      destinations: [umami, newrelic]
+      level: WARNING
+      fields: [method, error_type, error_message]
+    
+    login:
+      description: "User logged in"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, method, is_returning]
+    
+    login_failed:
+      description: "Login attempt failed"
+      destinations: [newrelic]
+      level: WARNING
+      fields: [method, error_type]
+    
+    logout:
+      description: "User logged out"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, session_duration_mins]
+    
+    password_reset_requested:
+      description: "Password reset initiated"
+      destinations: [newrelic]
+      level: INFO
+      fields: [email_domain]
+    
+    password_reset_completed:
+      description: "Password successfully reset"
+      destinations: [newrelic]
+      level: INFO
+      fields: [user_id]
+    
+    token_refreshed:
+      description: "Auth token was refreshed"
+      destinations: [newrelic]
+      level: DEBUG
+      fields: [user_id]
+
+  # ---------------------------------------------------------------------------
+  # Generation Events
+  # ---------------------------------------------------------------------------
+  generation:
+    started:
+      description: "User started a generation"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, model, mode, num_variations, has_reference_image, prompt_length, credits_before]
+    
+    completed:
+      description: "Generation completed successfully"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, model, mode, duration_ms, output_count, credits_used, generation_id]
+    
+    failed:
+      description: "Generation failed"
+      destinations: [umami, newrelic]
+      level: ERROR
+      fields: [user_id, model, mode, error_type, error_message, stage, credits_refunded]
+    
+    cancelled:
+      description: "User cancelled generation"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, model, stage, time_elapsed_ms]
+    
+    retried:
+      description: "User retried a failed generation"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, model, retry_count, original_error]
+    
+    queued:
+      description: "Generation added to queue"
+      destinations: [newrelic]
+      level: DEBUG
+      fields: [user_id, model, queue_position]
+    
+    prompt_enhanced:
+      description: "Prompt was enhanced by LLM"
+      destinations: [newrelic]
+      level: INFO
+      fields: [user_id, original_length, enhanced_length, llm_model]
+    
+    variation_generated:
+      description: "Variation of prompt was created"
+      destinations: [newrelic]
+      level: DEBUG
+      fields: [user_id, variation_index, variation_type]
+    
+    image_uploaded:
+      description: "Reference image uploaded for generation"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, file_size_kb, file_type, upload_duration_ms]
+
+  # ---------------------------------------------------------------------------
+  # Credit & Payment Events
+  # ---------------------------------------------------------------------------
+  credits:
+    checked:
+      description: "User credit balance checked"
+      destinations: [newrelic]
+      level: DEBUG
+      fields: [user_id, balance, tier]
+    
+    deducted:
+      description: "Credits deducted for action"
+      destinations: [newrelic]
+      level: INFO
+      fields: [user_id, amount, reason, balance_after, generation_id]
+    
+    added:
+      description: "Credits added to account"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, amount, source, balance_after]
+    
+    low_warning:
+      description: "User credits below threshold"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, balance, threshold]
+    
+    depleted:
+      description: "User ran out of credits"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, action_blocked]
+    
+    refunded:
+      description: "Credits refunded"
+      destinations: [newrelic]
+      level: INFO
+      fields: [user_id, amount, reason, generation_id]
+
+  checkout:
+    started:
+      description: "User started checkout"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, package_id, package_name, amount, credits]
+    
+    completed:
+      description: "Checkout completed successfully"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, package_id, amount, credits, payment_method, session_id, is_first_purchase]
+    
+    failed:
+      description: "Checkout failed"
+      destinations: [umami, newrelic]
+      level: ERROR
+      fields: [user_id, package_id, error_type, error_message]
+    
+    abandoned:
+      description: "User abandoned checkout"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, package_id, stage, time_on_page_secs]
+    
+    webhook_received:
+      description: "Payment webhook received"
+      destinations: [newrelic]
+      level: INFO
+      fields: [event_type, session_id, has_signature]
+    
+    webhook_processed:
+      description: "Payment webhook processed"
+      destinations: [newrelic]
+      level: INFO
+      fields: [session_id, credits_added, user_id]
+    
+    webhook_failed:
+      description: "Payment webhook processing failed"
+      destinations: [newrelic]
+      level: ERROR
+      fields: [session_id, error_type, error_message]
+    
+    duplicate_prevented:
+      description: "Duplicate payment prevented"
+      destinations: [newrelic]
+      level: WARNING
+      fields: [session_id, user_id]
+
+  subscription:
+    started:
+      description: "User started subscription"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, plan_id, monthly_amount]
+    
+    renewed:
+      description: "Subscription renewed"
+      destinations: [newrelic]
+      level: INFO
+      fields: [user_id, plan_id, renewal_count]
+    
+    cancelled:
+      description: "Subscription cancelled"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, plan_id, reason, tenure_days]
+    
+    payment_failed:
+      description: "Subscription payment failed"
+      destinations: [newrelic]
+      level: ERROR
+      fields: [user_id, plan_id, error_type]
+
+  coupon:
+    applied:
+      description: "Coupon applied to purchase"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, coupon_code, discount_percent, package_id]
+    
+    invalid:
+      description: "Invalid coupon attempted"
+      destinations: [newrelic]
+      level: INFO
+      fields: [user_id, coupon_code, reason]
+
+  # ---------------------------------------------------------------------------
+  # UI Interaction Events
+  # ---------------------------------------------------------------------------
+  ui:
+    page_view:
+      description: "User viewed a page"
+      destinations: [umami]
+      level: DEBUG
+      fields: [path, referrer, time_on_previous_page_secs]
+    
+    button_click:
+      description: "User clicked a button"
+      destinations: [umami]
+      level: DEBUG
+      sample_rate: 0.5
+      fields: [button_id, button_text, page]
+    
+    model_selected:
+      description: "User selected a model"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [model_id, model_name, previous_model, selection_method]
+    
+    mode_switched:
+      description: "User switched generation mode"
+      destinations: [umami]
+      level: INFO
+      fields: [from_mode, to_mode]
+    
+    gallery_opened:
+      description: "User opened image gallery"
+      destinations: [umami]
+      level: DEBUG
+      fields: [image_count, source]
+    
+    image_downloaded:
+      description: "User downloaded an image"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [user_id, image_id, model, format]
+    
+    image_shared:
+      description: "User shared an image"
+      destinations: [umami]
+      level: INFO
+      fields: [image_id, platform]
+    
+    settings_changed:
+      description: "User changed a setting"
+      destinations: [umami]
+      level: INFO
+      fields: [setting_name, new_value]
+    
+    help_opened:
+      description: "User opened help"
+      destinations: [umami]
+      level: DEBUG
+      fields: [page, trigger]
+    
+    error_displayed:
+      description: "Error shown to user"
+      destinations: [umami, newrelic]
+      level: WARNING
+      fields: [error_type, error_message, page, user_action]
+    
+    feature_discovered:
+      description: "User discovered a feature"
+      destinations: [umami]
+      level: INFO
+      fields: [feature_name, discovery_method]
+    
+    tooltip_shown:
+      description: "Tooltip displayed to user"
+      destinations: [umami]
+      level: DEBUG
+      sample_rate: 0.1
+      fields: [tooltip_id, page]
+    
+    modal_opened:
+      description: "Modal dialog opened"
+      destinations: [umami]
+      level: DEBUG
+      fields: [modal_id, trigger]
+    
+    modal_closed:
+      description: "Modal dialog closed"
+      destinations: [umami]
+      level: DEBUG
+      fields: [modal_id, close_method, time_open_secs]
+
+  # ---------------------------------------------------------------------------
+  # Session & Engagement Events
+  # ---------------------------------------------------------------------------
+  session:
+    started:
+      description: "User session started"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [referrer, utm_source, utm_medium, utm_campaign, device_type, is_returning]
+    
+    ended:
+      description: "User session ended"
+      destinations: [umami, newrelic]
+      level: INFO
+      fields: [duration_mins, pages_viewed, actions_taken, generations_made]
+    
+    idle_timeout:
+      description: "Session timed out due to inactivity"
+      destinations: [newrelic]
+      level: DEBUG
+      fields: [last_action, idle_duration_mins]
+    
+    tab_hidden:
+      description: "User switched away from tab"
+      destinations: [newrelic]
+      level: DEBUG
+      sample_rate: 0.1
+      fields: [page]
+    
+    tab_visible:
+      description: "User returned to tab"
+      destinations: [newrelic]
+      level: DEBUG
+      sample_rate: 0.1
+      fields: [page, hidden_duration_secs]
+
+  # ---------------------------------------------------------------------------
+  # API & Performance Events
+  # ---------------------------------------------------------------------------
+  api:
+    request:
+      description: "API request made"
+      destinations: [newrelic]
+      level: DEBUG
+      sample_rate: 0.1
+      fields: [endpoint, method, duration_ms, status_code, user_id]
+    
+    slow_request:
+      description: "API request exceeded threshold"
+      destinations: [newrelic]
+      level: WARNING
+      fields: [endpoint, method, duration_ms, threshold_ms, user_id]
+    
+    rate_limited:
+      description: "Request was rate limited"
+      destinations: [newrelic]
+      level: WARNING
+      fields: [endpoint, user_id, limit_type]
+
+  model:
+    latency:
+      description: "Model generation latency"
+      destinations: [newrelic]
+      level: INFO
+      fields: [model, duration_ms, queue_time_ms, processing_time_ms]
+    
+    error:
+      description: "Model API error"
+      destinations: [newrelic]
+      level: ERROR
+      fields: [model, error_type, error_message, retry_count]
+
+  # ---------------------------------------------------------------------------
+  # Error Events
+  # ---------------------------------------------------------------------------
+  error:
+    frontend:
+      description: "Frontend error occurred"
+      destinations: [umami, newrelic]
+      level: ERROR
+      fields: [error_type, message, component, stack, page, user_id]
+    
+    backend:
+      description: "Backend error occurred"
+      destinations: [newrelic]
+      level: ERROR
+      fields: [error_type, message, endpoint, stack, user_id, request_id]
+    
+    external_api:
+      description: "External API error"
+      destinations: [newrelic]
+      level: ERROR
+      fields: [api_name, status_code, error_message, retry_count, endpoint]
+    
+    validation:
+      description: "Validation error"
+      destinations: [newrelic]
+      level: WARNING
+      fields: [field, expected, received, endpoint, user_id]
+    
+    security:
+      description: "Security-related event"
+      destinations: [newrelic]
+      level: WARNING
+      fields: [event_type, ip_hash, user_agent_hash, user_id]
+
+# =============================================================================
+# EVENT ROUTING
+# =============================================================================
+
+routing:
+  # Default destinations if not specified in event definition
+  default_destinations: [newrelic]
+  
+  # Override destinations by pattern
+  overrides:
+    # All error events always go to newrelic
+    "error.*": [newrelic]
+    # All checkout events are important - both destinations
+    "checkout.*": [umami, newrelic]
+
+# =============================================================================
+# SAMPLING CONFIGURATION
+# =============================================================================
+
+sampling:
+  # Global sample rate (1.0 = 100%)
+  global_rate: 1.0
+  
+  # Per-event sample rates (override event-level settings)
+  rates:
+    api.request: 0.1
+    session.tab_hidden: 0.1
+    session.tab_visible: 0.1
+    ui.button_click: 0.5
+    ui.tooltip_shown: 0.1
+
+# =============================================================================
+# CONTEXT ENRICHMENT
+# =============================================================================
+
+enrichment:
+  # Fields automatically added to ALL events
+  always_include:
+    - timestamp
+    - environment
+    - app_name
+    - app_version
+  
+  # Fields added when available in context
+  include_when_available:
+    - user_id
+    - session_id
+    - request_id
+    - user_tier
+    - credits_balance
+
+# =============================================================================
+# PRIVACY CONFIGURATION
+# =============================================================================
+
+privacy:
+  # Fields to completely remove before sending
+  redact_fields:
+    - password
+    - token
+    - api_key
+    - secret
+    - credit_card
+    - cvv
+    - ssn
+  
+  # Fields to hash (preserves cardinality for analysis)
+  hash_fields:
+    - email
+    - ip_address
+    - phone
+  
+  # Patterns to redact from string values
+  redact_patterns:
+    - email: '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+    - credit_card: '\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b'
+    - api_key: '(sk_live_|sk_test_|api_)[a-zA-Z0-9]{20,}'
+    - jwt: 'eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*'
+
+# =============================================================================
+# THRESHOLDS & ALERTS
+# =============================================================================
+
+thresholds:
+  # API performance thresholds
+  api_slow_request_ms: 3000
+  
+  # Credit thresholds
+  credits_low_warning: 10
+  
+  # Session thresholds
+  idle_timeout_mins: 30
+
+# =============================================================================
+# BUSINESS METRICS (for documentation/reference)
+# =============================================================================
+
+metrics:
+  # Key metrics that can be derived from events
+  definitions:
+    - name: signup_to_first_purchase_rate
+      description: "% of signups that make a purchase"
+      events: [auth.signup_completed, checkout.completed]
+    
+    - name: generations_per_session
+      description: "Average generations per user session"
+      events: [session.started, generation.completed]
+    
+    - name: model_success_rate
+      description: "% of generations that succeed per model"
+      events: [generation.started, generation.completed]
+      group_by: model
+    
+    - name: avg_generation_time
+      description: "Average time to complete generation"
+      events: [generation.completed]
+      field: duration_ms
+      group_by: model
+    
+    - name: revenue_per_user
+      description: "Total revenue per unique user"
+      events: [checkout.completed]
+      field: amount
+    
+    - name: credit_utilization
+      description: "% of purchased credits actually used"
+      events: [credits.added, credits.deducted]

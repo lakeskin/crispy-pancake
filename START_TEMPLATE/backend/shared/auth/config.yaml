@@ -1,0 +1,83 @@
+# Global Auth Configuration
+# Can be overridden by app-level config or environment variables
+
+auth:
+  # Default provider (supabase, auth0, firebase, custom)
+  provider: "supabase"
+  
+  # Session management
+  session:
+    cookie_name: "auth_token"
+    cookie_secure: true  # HTTPS only in production
+    cookie_httponly: true
+    cookie_samesite: "lax"
+    max_age: 604800  # 7 days in seconds (when remember_me is true)
+    session_max_age: 3600  # 1 hour in seconds (when remember_me is false)
+  
+  # Session persistence / Remember Me
+  persistence:
+    enabled: true
+    default_remember_me: true  # Default state for "remember me" checkbox
+    # Storage keys (used by frontend)
+    access_token_key: "auth_token"
+    refresh_token_key: "auth_refresh_token"
+    user_key: "auth_user"
+    remember_me_key: "auth_remember_me"
+    expires_at_key: "auth_expires_at"
+    # Token refresh settings
+    refresh_threshold_seconds: 300  # Refresh token 5 minutes before expiry
+    auto_refresh: true  # Automatically refresh tokens before expiry
+    refresh_on_mount: true  # Check and refresh token when app loads
+  
+  # Token validation
+  tokens:
+    verify_signature: true
+    verify_expiry: true
+    clock_skew_seconds: 60  # Allow 60 seconds clock skew
+    # Supabase access tokens typically expire in 1 hour (3600 seconds)
+    default_expires_in: 3600
+  
+  # Security settings
+  security:
+    require_email_verification: true  # Note: This is informational only
+    # Actual email confirmation is controlled at Supabase project level
+    # Auth → Settings → Email Auth → "Enable email confirmations"
+    # Our code handles both scenarios gracefully:
+    # - Enabled: signup returns user without session, email confirmation required
+    # - Disabled: signup returns user with session, immediate login
+    password_min_length: 8
+    enforce_mfa: false  # Multi-factor authentication
+  
+  # Rate limiting (optional, per user)
+  rate_limiting:
+    enabled: false
+    max_requests_per_hour: 100
+  
+  # Redirect URLs
+  urls:
+    login_redirect: "/login"
+    logout_redirect: "/"
+    unauthorized_redirect: "/unauthorized"
+
+# Provider-specific configurations
+providers:
+  supabase:
+    auth_endpoint: "auth/v1"
+    jwt_secret_env: "SUPABASE_JWT_SECRET"
+    service_key_env: "SUPABASE_SERVICE_KEY"
+    url_env: "SUPABASE_URL"
+    
+  auth0:
+    domain_env: "AUTH0_DOMAIN"
+    client_id_env: "AUTH0_CLIENT_ID"
+    client_secret_env: "AUTH0_CLIENT_SECRET"
+  
+  firebase:
+    project_id_env: "FIREBASE_PROJECT_ID"
+    credentials_env: "FIREBASE_CREDENTIALS"
+
+# Logging
+logging:
+  log_auth_attempts: true
+  log_token_validation: false  # Set to true for debugging
+  log_user_actions: true

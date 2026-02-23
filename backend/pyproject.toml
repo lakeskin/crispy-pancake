@@ -1,0 +1,25 @@
+[project]
+name = "salikchat-backend"
+version = "1.0.0"
+description = "SalikChat - Connect car owners with mechanics"
+requires-python = ">=3.10"
+
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0.0",
+    "supabase>=2.0.0",
+    "PyJWT>=2.8.0",
+    "python-multipart>=0.0.9",
+    "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "black>=23.0.0",
+    "ruff>=0.4.0",
+]

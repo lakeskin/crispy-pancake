@@ -1,0 +1,149 @@
+# SalikChat Backend Configuration
+# All configurable values live here — NEVER hardcode in Python
+
+app:
+  name: "SalikChat"
+  version: "1.0.0"
+  description: "Connect car owners with mechanics for quick car diagnostics"
+  cors_origins:
+    - "http://localhost:5173"
+    - "http://localhost:3000"
+    - "https://salik.chat"
+
+# Car-related config
+cars:
+  categories:
+    - id: engine
+      label: "Engine"
+      icon: "🔧"
+    - id: brakes
+      label: "Brakes"
+      icon: "🛑"
+    - id: electrical
+      label: "Electrical"
+      icon: "⚡"
+    - id: suspension
+      label: "Suspension"
+      icon: "🔩"
+    - id: ac
+      label: "AC / Heating"
+      icon: "❄️"
+    - id: transmission
+      label: "Transmission"
+      icon: "⚙️"
+    - id: body
+      label: "Body / Paint"
+      icon: "🚗"
+    - id: other
+      label: "Other"
+      icon: "❓"
+
+  urgency_levels:
+    - id: low
+      label: "Low — Can wait a few weeks"
+      color: "#4caf50"
+    - id: normal
+      label: "Normal — This week ideally"
+      color: "#ff9800"
+    - id: urgent
+      label: "Urgent — Needs attention now"
+      color: "#f44336"
+
+  budget_ranges:
+    - id: under_50
+      label: "Under AED 50"
+    - id: 50_200
+      label: "AED 50 - 200"
+    - id: 200_500
+      label: "AED 200 - 500"
+    - id: above_500
+      label: "Above AED 500"
+    - id: not_sure
+      label: "Not sure"
+
+  confidence_levels:
+    - id: low
+      label: "Low — Need more info"
+      color: "#f44336"
+    - id: medium
+      label: "Medium — Likely diagnosis"
+      color: "#ff9800"
+    - id: high
+      label: "High — Very confident"
+      color: "#4caf50"
+
+# Mechanic specializations
+mechanic:
+  specializations:
+    - engine
+    - brakes
+    - electrical
+    - suspension
+    - ac
+    - transmission
+    - body
+    - diagnostics
+    - tires
+    - oil_change
+
+# Upload limits
+uploads:
+  max_audio_size_mb: 10
+  max_image_size_mb: 5
+  max_video_size_mb: 50
+  max_audio_duration_seconds: 60
+  allowed_audio_types:
+    - "audio/webm"
+    - "audio/mp3"
+    - "audio/mpeg"
+    - "audio/wav"
+    - "audio/ogg"
+    - "audio/mp4"
+  allowed_image_types:
+    - "image/jpeg"
+    - "image/png"
+    - "image/webp"
+    - "image/heic"
+  allowed_video_types:
+    - "video/mp4"
+    - "video/webm"
+    - "video/quicktime"
+
+# Rate limiting
+rate_limits:
+  issues_per_hour: 5
+  messages_per_minute: 60
+  uploads_per_hour: 20
+
+# Supabase storage buckets
+storage:
+  buckets:
+    issue_media:
+      name: "issue-media"
+      public: true
+      file_size_limit: 52428800  # 50MB
+      allowed_mime_types: []     # all allowed
+    chat_media:
+      name: "chat-media"
+      public: false
+      file_size_limit: 10485760  # 10MB
+    mechanic_docs:
+      name: "mechanic-docs"
+      public: false
+      file_size_limit: 10485760  # 10MB
+    avatars:
+      name: "avatars"
+      public: true
+      file_size_limit: 2097152   # 2MB
+      allowed_mime_types:
+        - "image/jpeg"
+        - "image/png"
+        - "image/webp"
+
+# Platform settings
+platform:
+  commission_rate: 0.15
+  default_currency: "AED"
+  default_country: "AE"
+  min_mechanic_experience_years: 0
+  verification_required_for_paid: true
