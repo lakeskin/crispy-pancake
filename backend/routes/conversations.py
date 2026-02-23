@@ -127,7 +127,7 @@ async def get_conversation(conversation_id: str, user: dict = Depends(get_curren
 
     try:
         conv = sb.table("conversations").select(
-            "*, car_issues(*, issue_media(*)), profiles!conversations_customer_id_fkey(full_name, avatar_url, city), profiles!conversations_mechanic_id_fkey(full_name, avatar_url, city)"
+            "*, car_issues(*, issue_media(*))"
         ).eq("id", conversation_id).single().execute()
     except Exception:
         raise HTTPException(status_code=404, detail="Conversation not found")
@@ -139,5 +139,15 @@ async def get_conversation(conversation_id: str, user: dict = Depends(get_curren
     data = conv.data
     if data["customer_id"] != user["id"] and data["mechanic_id"] != user["id"]:
         raise HTTPException(status_code=403, detail="Not a participant in this conversation")
+
+    # Fetch customer and mechanic profiles separately (PostgREST can't join same table twice)
+    for key, uid_field in [("customer_profile", "customer_id"), ("mechanic_profile", "mechanic_id")]:
+        try:
+            prof = sb.table("profiles").select(
+                "full_name, avatar_url, city"
+            ).eq("id", data[uid_field]).single().execute()
+            data[key] = prof.data
+        except Exception:
+            data[key] = None
 
     return data

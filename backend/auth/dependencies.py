@@ -61,17 +61,34 @@ def _verify_jwt(token: str) -> dict:
             logger.debug("Local JWT decode failed (%s), falling back to Supabase API", e)
 
     # Fallback: ask Supabase to validate
+    # IMPORTANT: Do NOT use the singleton get_supabase() here!
+    # sb.auth.get_user(token) taints the client's auth context,
+    # causing subsequent operations (storage, table) to use the
+    # user's token instead of the service key, triggering RLS errors.
     try:
-        sb = get_supabase()
-        user_resp = sb.auth.get_user(token)
-        u = user_resp.user
-        logger.debug("JWT verified via Supabase API for user %s", u.id)
+        import httpx
+        supabase_url = os.getenv("SUPABASE_URL", "")
+        resp = httpx.get(
+            f"{supabase_url}/auth/v1/user",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "apikey": os.getenv("SUPABASE_KEY", ""),
+            },
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            raise ValueError(f"Supabase auth returned {resp.status_code}")
+        u = resp.json()
+        logger.debug("JWT verified via Supabase API for user %s", u.get("id"))
+        meta = u.get("user_metadata") or {}
         return {
-            "id": u.id,
-            "email": u.email,
-            "role": (u.user_metadata or {}).get("role", "customer"),
-            "user_metadata": u.user_metadata or {},
+            "id": u["id"],
+            "email": u.get("email", ""),
+            "role": meta.get("role", "customer"),
+            "user_metadata": meta,
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.warning("Supabase API token verification failed: %s", e)
         raise HTTPException(status_code=401, detail="Invalid token")

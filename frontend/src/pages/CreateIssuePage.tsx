@@ -8,7 +8,6 @@ import {
   Mic, Stop, Delete, CloudUpload, PhotoCamera, Videocam, CheckCircle,
 } from "@mui/icons-material";
 import api from "../services/api";
-import { supabase } from "../services/supabase";
 import { useAuth } from "../contexts/AuthContext";
 
 const STEPS = ["Describe the Issue", "Car Details", "Upload Media", "Review & Post"];
@@ -137,27 +136,27 @@ export default function CreateIssuePage() {
       });
       const issue = issueRes.data;
 
-      // 2. Upload media files to Supabase Storage & register
+      // 2. Upload media files via backend proxy & register
       for (const media of mediaFiles) {
-        const ext = media.file.name.split(".").pop() || "bin";
-        const path = `${user?.id}/${issue.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+        try {
+          const formData = new FormData();
+          formData.append("file", media.file);
+          formData.append("issue_id", issue.id);
 
-        const { error: uploadErr } = await supabase.storage
-          .from("issue-media")
-          .upload(path, media.file, { contentType: media.file.type });
+          const uploadRes = await api.post("/uploads/issue-media", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
 
-        if (uploadErr) {
+          // Register media in DB
+          await api.post(`/issues/${issue.id}/media`, {
+            media_type: media.type,
+            storage_path: uploadRes.data.storage_path,
+            file_name: uploadRes.data.file_name || media.file.name,
+            file_size: uploadRes.data.file_size || media.file.size,
+          });
+        } catch (uploadErr) {
           console.error("Upload error:", uploadErr);
-          continue;
         }
-
-        // Register media in DB
-        await api.post(`/issues/${issue.id}/media`, {
-          media_type: media.type,
-          storage_path: path,
-          file_name: media.file.name,
-          file_size: media.file.size,
-        });
       }
 
       navigate(`/issues/${issue.id}`);

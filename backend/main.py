@@ -95,6 +95,7 @@ from routes.responses import router as responses_router  # noqa: E402
 from routes.conversations import router as conversations_router  # noqa: E402
 from routes.messages import router as messages_router  # noqa: E402
 from routes.config_routes import router as config_router  # noqa: E402
+from routes.uploads import router as uploads_router  # noqa: E402
 
 app.include_router(auth_router)
 app.include_router(profiles_router)
@@ -103,6 +104,7 @@ app.include_router(responses_router)
 app.include_router(conversations_router)
 app.include_router(messages_router)
 app.include_router(config_router)
+app.include_router(uploads_router)
 
 
 # ---------- Health ----------

@@ -5,6 +5,7 @@ Real-time delivery is handled by Supabase Realtime on the frontend.
 
 from typing import Optional
 import logging
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel
 from services.supabase_client import get_supabase
@@ -25,7 +26,7 @@ class SendMessageRequest(BaseModel):
 
 
 class MarkReadRequest(BaseModel):
-    message_ids: list[str]
+    message_ids: Optional[list[str]] = None
 
 
 # ---------- Endpoints ----------
@@ -98,7 +99,7 @@ async def send_message(
 
     # Update conversation last_message_at
     sb.table("conversations").update({
-        "last_message_at": "now()",
+        "last_message_at": datetime.now(timezone.utc).isoformat(),
     }).eq("id", conversation_id).execute()
 
     # Notify the other participant
@@ -121,15 +122,21 @@ async def send_message(
 @router.post("/{conversation_id}/messages/read")
 async def mark_messages_read(
     conversation_id: str,
-    body: MarkReadRequest,
+    body: MarkReadRequest = MarkReadRequest(),
     user: dict = Depends(get_current_user),
 ):
-    """Mark messages as read."""
+    """Mark messages as read. If message_ids not provided, marks all unread in the conversation."""
     sb = get_supabase()
 
-    # Only mark messages that aren't from the current user
-    sb.table("messages").update({"is_read": True}).in_(
-        "id", body.message_ids
-    ).neq("sender_id", user["id"]).execute()
+    if body.message_ids:
+        # Mark specific messages
+        sb.table("messages").update({"is_read": True}).in_(
+            "id", body.message_ids
+        ).neq("sender_id", user["id"]).execute()
+    else:
+        # Mark all unread messages in the conversation
+        sb.table("messages").update({"is_read": True}).eq(
+            "conversation_id", conversation_id
+        ).neq("sender_id", user["id"]).eq("is_read", False).execute()
 
     return {"message": "Messages marked as read"}

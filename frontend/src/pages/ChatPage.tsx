@@ -122,17 +122,18 @@ export default function ChatPage() {
 
     setSending(true);
     try {
-      const path = `chat/${conversationId}/${Date.now()}_${file.name}`;
-      const { error: uploadErr } = await supabase.storage
-        .from("chat-media")
-        .upload(path, file, { contentType: file.type });
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("conversation_id", conversationId!);
 
-      if (uploadErr) throw uploadErr;
+      const uploadRes = await api.post("/uploads/chat-media", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-      const { data } = supabase.storage.from("chat-media").getPublicUrl(path);
+      const fileUrl = uploadRes.data.signed_url || uploadRes.data.public_url;
 
       await api.post(`/conversations/${conversationId}/messages`, {
-        content: data.publicUrl,
+        content: fileUrl,
         message_type: "image",
       });
     } catch {
@@ -156,15 +157,17 @@ export default function ChatPage() {
 
         setSending(true);
         try {
-          const path = `chat/${conversationId}/${file.name}`;
-          const { error: uploadErr } = await supabase.storage
-            .from("chat-media")
-            .upload(path, file, { contentType: file.type });
-          if (uploadErr) throw uploadErr;
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("conversation_id", conversationId!);
 
-          const { data } = supabase.storage.from("chat-media").getPublicUrl(path);
+          const uploadRes = await api.post("/uploads/chat-media", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+
+          const fileUrl = uploadRes.data.signed_url || uploadRes.data.public_url;
           await api.post(`/conversations/${conversationId}/messages`, {
-            content: data.publicUrl,
+            content: fileUrl,
             message_type: "audio",
           });
         } catch {

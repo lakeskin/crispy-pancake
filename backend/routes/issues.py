@@ -136,11 +136,21 @@ async def get_issue(issue_id: str, user: Optional[dict] = Depends(get_optional_u
 
     # Fetch responses with mechanic info
     responses = sb.table("mechanic_responses").select(
-        "*, profiles!mechanic_responses_mechanic_id_fkey(full_name, avatar_url), mechanic_profiles!mechanic_responses_mechanic_id_fkey(rating_avg, rating_count, specializations, verification_status)"
+        "*, profiles!mechanic_responses_mechanic_id_fkey(full_name, avatar_url)"
     ).eq("issue_id", issue_id).order("created_at", desc=False).execute()
 
     result = issue.data
-    result["responses"] = responses.data or []
+    resp_list = responses.data or []
+    # Enrich with mechanic_profiles data
+    for r in resp_list:
+        try:
+            mp = sb.table("mechanic_profiles").select(
+                "rating_avg, rating_count, specializations, verification_status"
+            ).eq("id", r["mechanic_id"]).single().execute()
+            r["mechanic_profile"] = mp.data
+        except Exception:
+            r["mechanic_profile"] = None
+    result["responses"] = resp_list
 
     return result
 
